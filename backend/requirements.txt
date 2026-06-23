@@ -8,6 +8,7 @@ scikit-learn
 requests
 =======
 scikit-learn
+requests
 >>>>>>> Stashed changes
 
 joblib
