@@ -1166,7 +1166,7 @@ elif page == "Neural Simulation":
                         </svg>
                         <span style="color:#64748b; font-size:0.75rem; text-transform:uppercase; font-weight:600;">Baseline Liability</span>
                     </div>
-                    <div style="font-size:2rem; font-weight:700; background: linear-gradient(135deg, #6366f1, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">{res['base_cost']:,.0f}</div>
+                    <div style="font-size:2rem; font-weight:700; color:#4f46e5;">{res['base_cost']:,.0f}</div>
                     <div style="color:#475569; font-size:0.85rem;">TND</div>
                 </div>
                 """, unsafe_allow_html=True)
@@ -1178,9 +1178,9 @@ elif page == "Neural Simulation":
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
                         </svg>
-                        <span style="font-size:0.75rem; text-transform:uppercase; font-weight:600;">Optimized Cost</span>
+                        <span style="color:#64748b; font-size:0.75rem; text-transform:uppercase; font-weight:600;">Optimized Cost</span>
                     </div>
-                    <div style="font-size:2rem; font-weight:700; background: linear-gradient(135deg, #10b981, #059669); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">{res['scenario_cost']:,.0f}</div>
+                    <div style="font-size:2rem; font-weight:700; color:#059669;">{res['scenario_cost']:,.0f}</div>
                     <div style="color:#475569; font-size:0.85rem;">TND</div>
                 </div>
                 """, unsafe_allow_html=True)
@@ -1194,10 +1194,11 @@ elif page == "Neural Simulation":
                         </svg>
                         <span style="color:#64748b; font-size:0.75rem; text-transform:uppercase; font-weight:600;">Cost Avoidance</span>
                     </div>
-                    <div style="font-size:2rem; font-weight:700; background: linear-gradient(135deg, #ef4444, #dc2626); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">{res['savings']:,.0f}</div>
+                    <div style="font-size:2rem; font-weight:700; color:#dc2626;">{res['savings']:,.0f}</div>
                     <div style="color:#10b981; font-size:0.85rem; font-weight:500;">↑ Positive ROI</div>
                 </div>
                 """, unsafe_allow_html=True)
+
 
         else:
             try:
@@ -1223,9 +1224,9 @@ elif page == "Neural Simulation":
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
                         </svg>
-                        <span style="color:#64748b; font-size:0.75rem; text-transform:uppercase; font-weight:600;">Projected Annual Cost</span>
+                        <span style="color:#64748b; font-size:0.75rem; text-transform:uppercase; font-weight:600;">Projected Cost</span>
                     </div>
-                    <div style="font-size:2rem; font-weight:700; background: linear-gradient(135deg, #6366f1, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">{res['predicted_cost']:,.0f}</div>
+                    <div style="font-size:2rem; font-weight:700; color:#4f46e5;">{res['predicted_cost']:,.0f}</div>
                     <div style="color:#475569; font-size:0.85rem;">TND</div>
                 </div>
                 """, unsafe_allow_html=True)
@@ -1239,9 +1240,9 @@ elif page == "Neural Simulation":
                             <line x1="12" y1="9" x2="12" y2="13" />
                             <line x1="12" y1="17" x2="12.01" y2="17" />
                         </svg>
-                        <span style=" font-size:0.75rem; text-transform:uppercase; font-weight:600;">Risk Severity Score</span>
+                        <span style="color:#64748b; font-size:0.75rem; text-transform:uppercase; font-weight:600;">Risk Severity Score</span>
                     </div>
-                    <div style="font-size:2rem; font-weight:700; background: linear-gradient(135deg, #f59e0b, #d97706); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">{res['risk_score']}/100</div>
+                    <div style="font-size:2rem; font-weight:700; color:#d97706;">{res['risk_score']}/100</div>
                     <div style="color:#475569; font-size:0.85rem;">out of 100</div>
                 </div>
                 """, unsafe_allow_html=True)
@@ -1268,25 +1269,5 @@ elif page == "Neural Simulation":
                         <span style="color:{color}; font-weight:600; font-size:0.9rem; text-transform:uppercase;">{risk_level}</span>
                     </div>
                     <div style="font-size:1.8rem; font-weight:700; color: {color};">{risk_level}</div>
-                </div>
-                """, unsafe_allow_html=True)
-
-            # Feedback message (replaces st.success/warning/error)
-            if res['risk_level'] == "Low Risk":
-                st.markdown("""
-                <div style="background: rgba(16, 185, 129, 0.06); border-left: 4px solid #10b981; padding: 1rem; border-radius: 0 12px 12px 0; margin-top: 1rem;">
-                    <strong style="color:#10b981;">Low Risk</strong> - Profile aligns with low-variance baseline.
-                </div>
-                """, unsafe_allow_html=True)
-            elif res['risk_level'] == "Medium Risk":
-                st.markdown("""
-                <div style="background: rgba(245, 158, 11, 0.06); border-left: 4px solid #f59e0b; padding: 1rem; border-radius: 0 12px 12px 0; margin-top: 1rem;">
-                    <strong style="color:#f59e0b;">Moderate Risk</strong> - Elevated cost probability detected.
-                </div>
-                """, unsafe_allow_html=True)
-            else:
-                st.markdown("""
-                <div style="background: rgba(239, 68, 68, 0.06); border-left: 4px solid #ef4444; padding: 1rem; border-radius: 0 12px 12px 0; margin-top: 1rem;">
-                    <strong style="color:#ef4444;">High Risk</strong>
                 </div>
                 """, unsafe_allow_html=True)
