@@ -889,7 +889,7 @@ elif page == "Employee Registry":
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
                                 </svg>
-                                <span style="color:#64748b; font-size:0.75rem; text-transform:uppercase; font-weight:600;">Predicted Annual Cost</span>
+                                <span style="color:#64748b; font-size:0.75rem; text-transform:uppercase; font-weight:600;">Predicted Cost</span>
                             </div>
                             <div style="font-size:2.3rem; font-weight:700; background: linear-gradient(135deg, #6366f1, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">{emp_data['predicted_cost']:,.0f}</div>
                             <div style="color:#475569; font-size:0.85rem; margin-top:0.3rem;">TND</div>
