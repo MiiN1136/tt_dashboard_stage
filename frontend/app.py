@@ -909,7 +909,7 @@ elif page == "Employee Registry":
                                     <line x1="16" y1="13" x2="8" y2="13" />
                                     <line x1="16" y1="17" x2="8" y2="17" />
                                 </svg>
-                                <span style="color:#64748b; font-size:0.75rem; text-transform:uppercase; font-weight:600;">Service Touches</span>
+                                <span style="color:#64748b; font-size:0.75rem; text-transform:uppercase; font-weight:600;">Used Services</span>
                             </div>
                             <div style="margin-top:0.8rem;">{features_html}</div>
                         </div>
