@@ -1178,7 +1178,7 @@ elif page == "Neural Simulation":
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
                         </svg>
-                        <span style="color:#64748b; font-size:0.75rem; text-transform:uppercase; font-weight:600;">Optimized Cost</span>
+                        <span style="font-size:0.75rem; text-transform:uppercase; font-weight:600;">Optimized Cost</span>
                     </div>
                     <div style="font-size:2rem; font-weight:700; background: linear-gradient(135deg, #10b981, #059669); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">{res['scenario_cost']:,.0f}</div>
                     <div style="color:#475569; font-size:0.85rem;">TND</div>
