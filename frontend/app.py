@@ -8,7 +8,7 @@ import plotly.graph_objects as go
 # CONFIGURATION & GLOBAL INITIALIZATION
 # ==========================================
 st.set_page_config(page_title="TT Healthcare Intelligence", layout="wide")
-BASE_URL = "http://127.0.0.1:8000"
+BASE_URL = "https://tt-backend-ieay.onrender.com"
 yes_no = ["No", "Yes"]
 
 def to_binary(x):
