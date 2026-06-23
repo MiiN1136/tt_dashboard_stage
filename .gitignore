@@ -1,6 +1,12 @@
 venv/
 backend/venv/
 
+# models
+*.pkl
+
+# datasets
+*.csv
+
 __pycache__/
 *.pyc
 
