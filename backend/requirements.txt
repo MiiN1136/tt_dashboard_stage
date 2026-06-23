@@ -3,4 +3,9 @@ uvicorn
 pandas
 numpy
 joblib
+<<<<<<< Updated upstream
 scikit-learn
+requests
+=======
+scikit-learn
+>>>>>>> Stashed changes
