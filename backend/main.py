@@ -22,9 +22,16 @@ app.add_middleware(
 feature_names = joblib.load("features.pkl")
 model = joblib.load("model.pkl")
 
-df_employee_risk = pd.read_csv(io.StringIO(os.getenv("EMPLOYEE_RISK_DATA", "")))
-df_mycover = pd.read_csv(io.StringIO(os.getenv("MYCOVER_DATA", "")))
-full_hr = pd.read_csv(io.StringIO(os.getenv("FULL_HR_DATA", "")))
+# Récupération des URLs secrètes depuis Render
+url_risk = os.getenv("EMPLOYEE_RISK_DATA")
+url_mycover = os.getenv("MYCOVER_DATA")
+url_hr = os.getenv("FULL_HR_DATA")
+
+# Chargement distant sécurisé
+df_employee_risk = pd.read_csv(url_risk) if url_risk else pd.DataFrame()
+df_mycover = pd.read_csv(url_mycover) if url_mycover else pd.DataFrame()
+full_hr = pd.read_csv(url_hr) if url_hr else pd.DataFrame()
+
 # %%
 FEATURES = [
     "Dependent_Age",
