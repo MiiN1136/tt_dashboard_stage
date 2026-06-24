@@ -22,9 +22,13 @@ app.add_middleware(
 feature_names = joblib.load("features.pkl")
 model = joblib.load("model.pkl")
 
-df_employee_risk = pd.read_csv(io.StringIO(os.getenv("EMPLOYEE_RISK_DATA", "")))
-df_mycover = pd.read_csv(io.StringIO(os.getenv("MYCOVER_DATA", "")))
-full_hr = pd.read_csv(io.StringIO(os.getenv("FULL_HR_DATA", "")))
+raw_risk = os.getenv("EMPLOYEE_RISK_DATA", "").strip()
+raw_mycover = os.getenv("MYCOVER_DATA", "").strip()
+raw_hr = os.getenv("FULL_HR_DATA", "").strip()
+
+df_employee_risk = pd.read_csv(io.StringIO(raw_risk)) if raw_risk else pd.DataFrame()
+df_mycover = pd.read_csv(io.StringIO(raw_mycover)) if raw_mycover else pd.DataFrame()
+full_hr = pd.read_csv(io.StringIO(raw_hr)) if raw_hr else pd.DataFrame()
 # %%
 FEATURES = [
     "Dependent_Age",
