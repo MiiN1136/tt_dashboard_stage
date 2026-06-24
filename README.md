@@ -454,15 +454,10 @@ A typical structure may look like this:
 │   ├── employee_risk.csv
 │   ├── df_cleaned.csv
 │   └── full_hr.csv
+|   └── requirements.txt
 ├── frontend/
 │   └── app.py
-├── data/
-│   ├── full_hr.csv
-│   ├── df_cleaned.csv
-│   └── employee_risk.csv
-├── notebooks/
-│   └── data_preparation.ipynb
-├── requirements.txt
+|   └── requirements.txt
 └── README.md
 ```
 
