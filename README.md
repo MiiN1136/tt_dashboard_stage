@@ -426,8 +426,8 @@ streamlit run app.py
 
 The project is deployed online as two separate services on Render:
 
-* **Backend API:** [link to backend service] (https://tt-backend-ieay.onrender.com/)
-* **Frontend Dashboard:** [link to frontend service] (https://tt-frontend-bvj0.onrender.com/)
+* **Backend API:** [link to backend service](https://tt-backend-ieay.onrender.com/)
+* **Frontend Dashboard:** [link to frontend service](https://tt-frontend-bvj0.onrender.com/)
 
 ### Important Note for Visitors (Render Free Tier)
 Since the platform is hosted on Render's free tier, both services go to sleep after 15 minutes of inactivity. The frontend application cannot automatically wake up the backend. 
