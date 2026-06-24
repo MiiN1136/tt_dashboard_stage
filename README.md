@@ -422,22 +422,22 @@ streamlit run app.py
 
 ---
 
-## Deployment on Render
+## Deployment
 
-The project is deployed on **Render** in two separate services:
+The project is deployed online as two separate services on Render:
 
-### Backend
-- FastAPI service hosted on Render
-- provides the model inference API and analytics endpoints
+* **Backend API:** [link to backend service] (https://tt-backend-ieay.onrender.com/)
+* **Frontend Dashboard:** [link to frontend service] (https://tt-frontend-bvj0.onrender.com/)
 
-### Frontend
-- Streamlit service hosted on Render
-- consumes the backend API and renders the BI dashboard
+### Important Note for Visitors (Render Free Tier)
+Since the platform is hosted on Render's free tier, both services go to sleep after 15 minutes of inactivity. The frontend application cannot automatically wake up the backend. 
 
-This deployment setup makes the project accessible online without requiring local installation.
->  **[Backend render link]** (https://tt-backend-ieay.onrender.com/)
->  **[Frontend render link]** (https://tt-frontend-bvj0.onrender.com/)
+To ensure the platform functions correctly, please follow these steps:
 
+1. Visit the Backend link first and wait for the page to finish loading (this spin-up process may take around one minute).
+2. Once the backend is fully active, open the Frontend link. If the dashboard displays a connection error initially, simply refresh the page.
+
+*If you open the frontend while the backend is sleeping, the charts and simulation components will fail to load until the backend is manually awoken.*
 
 ---
 
@@ -528,4 +528,4 @@ Special thanks to the TT supervision context for allowing the project to be shap
 
 ## Note
 
-The project uses **real HR information** and **synthetic healthcare events** to preserve confidentiality while still delivering a meaningful and realistic analytics system.
+The project uses **synthetic healthcare events** to preserve confidentiality.
