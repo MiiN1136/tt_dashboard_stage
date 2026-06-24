@@ -5,6 +5,8 @@ import joblib
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
 import numpy as np
+import io
+import os
 import requests
 
 # %%
@@ -19,9 +21,10 @@ app.add_middleware(
 
 feature_names = joblib.load("features.pkl")
 model = joblib.load("model.pkl")
-df_employee_risk = pd.read_csv("employee_risk.csv")
-df_mycover = pd.read_csv("df_cleaned.csv")
-full_hr = pd.read_csv("full_hr.csv")
+
+df_employee_risk = pd.read_csv(io.StringIO(os.getenv("EMPLOYEE_RISK_DATA", "")))
+df_mycover = pd.read_csv(io.StringIO(os.getenv("MYCOVER_DATA", "")))
+full_hr = pd.read_csv(io.StringIO(os.getenv("FULL_HR_DATA", "")))
 # %%
 FEATURES = [
     "Dependent_Age",
