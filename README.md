@@ -389,8 +389,8 @@ Returns monthly average cost trend.
 
 ### 1) Clone the repository
 ```bash
-git clone <your-repo-url>
-cd <your-repo-folder>
+git clone https://github.com/MiiN1136/tt_dashboard_stage.git
+cd tt_dashboard_stage
 ```
 
 ### 2) Create a virtual environment
@@ -406,12 +406,12 @@ source .venv/bin/activate   # Linux / macOS
 pip install -r requirements.txt
 ```
 
-### 4) Run the backend
+### 4) Run the backend locally
 ```bash
 uvicorn main:app --reload
 ```
 
-### 5) Run the frontend
+### 5) Run the frontend locally
 ```bash
 streamlit run app.py
 ```
@@ -435,6 +435,9 @@ The project is deployed on **Render** in two separate services:
 - consumes the backend API and renders the BI dashboard
 
 This deployment setup makes the project accessible online without requiring local installation.
+>  **[Backend render link]** (https://tt-backend-ieay.onrender.com/)
+>  **[Frontend render link]** (https://tt-frontend-bvj0.onrender.com/)
+
 
 ---
 
