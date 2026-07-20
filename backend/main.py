@@ -20,7 +20,7 @@ app.add_middleware(
 )
 
 feature_names = joblib.load("features.pkl")
-model = joblib.load("model.pkl")
+model = joblib.load("tt_healthcare_model1.1.pkl")
 
 # Récupération des URLs secrètes depuis Render
 url_risk = os.getenv("EMPLOYEE_RISK_DATA")
