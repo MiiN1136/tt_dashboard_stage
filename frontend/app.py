@@ -369,7 +369,9 @@ if page == "Enterprise Overview":
         "diabete": "#3b82f6",
         "hypertension": "#2563eb",
         "troubles musculosquelettiques": "#1d4ed8",
-        "aucune": "#1e3a8a"
+        "cardiaque": "#1e40af",
+        "cancer": "#1e3a8a",
+        "aucune": "#172554"
     }
 
     with col_chart1:
@@ -687,7 +689,7 @@ elif page == "Advanced Analytics":
                     {0: "No Clinic", 1: "Clinic Visited"}
                 )
                 risk_order = ["Low Risk", "Medium Risk", "High Risk", "Critical Risk"]
-                disease_order = ["None", "Asthma", "Musculoskeletal", "Diabetes", "Hypertension"]
+                disease_order = ["None", "Asthma", "Musculoskeletal", "Diabetes", "Hypertension", "Cardiaque", "Cancer"]
 
                 df_matrix = df_matrix.dropna(subset=["Risk_Level", "Disease_Type"])
 
