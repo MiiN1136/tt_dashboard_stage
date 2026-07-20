@@ -53,14 +53,19 @@ FEATURES = [
 # %%
 
 def risk_score(cost):
-    if cost < 100:
-        return 20
-    elif cost < 500:
-        return 50
-    elif cost < 2000:
-        return 75
-    else:
-        return 95
+    try:
+        val = float(cost)
+        
+        if val < 80:
+            return 20
+        elif val < 175:
+            return 50
+        elif val < 500:
+            return 75
+        else:
+            return 95
+    except (ValueError, TypeError):
+        return 0
     
 
 def risk_level(score):
