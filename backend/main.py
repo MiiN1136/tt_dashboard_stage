@@ -35,7 +35,10 @@ full_hr = pd.read_csv(url_hr) if url_hr else pd.DataFrame()
 # %%
 FEATURES = [
     "Dependent_Age",
+    "Couple_TT",
     "Chronic_Disease_asthme",
+    "Chronic_Disease_cancer",
+    "Chronic_Disease_cardiaque",
     "Chronic_Disease_diabete",
     "Chronic_Disease_hypertension",
     "Chronic_Disease_troubles musculosquelettiques",
@@ -80,6 +83,9 @@ def predict(data: dict):
     for col in expected_features:
         if col not in df.columns:
             df[col] = 0
+
+    if "Couple_TT" in df.columns:
+        df["Couple_TT"] = df["Couple_TT"].astype(int)
 
     # remove extra columns if any
     df = df[expected_features]
@@ -309,12 +315,20 @@ def employee_view(matricule: int):
     # aggregate correctly for model
     X = {
         "Dependent_Age": employee_age,
+        
+        # Couple_TT (Si une seule ligne a True, on considère que c'est un Couple_TT)
+        "Couple_TT": int(model_df["Couple_TT"].any()), 
+        
+        # Maladies
         "Chronic_Disease_asthme": int((model_df["Chronic_Disease"] == "asthme").any()),
         "Chronic_Disease_diabete": int((model_df["Chronic_Disease"] == "diabete").any()),
         "Chronic_Disease_hypertension": int((model_df["Chronic_Disease"] == "hypertension").any()),
         "Chronic_Disease_troubles musculosquelettiques": int((model_df["Chronic_Disease"] == "troubles musculosquelettiques").any()),
+        "Chronic_Disease_cancer": int((model_df["Chronic_Disease"] == "cancer").any()),
+        "Chronic_Disease_cardiaque": int((model_df["Chronic_Disease"] == "cardiaque").any()),
         "Chronic_Disease_aucune": int((model_df["Chronic_Disease"].isna()).all() or (model_df["Chronic_Disease"] == "None").all()),
 
+        # Prestations
         "Type_Prestation_Clinique": int((model_df["Type_Prestation"] == "Clinique").any()),
         "Type_Prestation_Consultation": int((model_df["Type_Prestation"] == "Consultation").any()),
         "Type_Prestation_Laboratoire": int((model_df["Type_Prestation"] == "Laboratoire").any()),
@@ -423,6 +437,8 @@ def risk_matrix():
         if row.get("Chronic_Disease_hypertension", 0) == 1: return "Hypertension"
         if row.get("Chronic_Disease_asthme", 0) == 1: return "Asthma"
         if row.get("Chronic_Disease_troubles musculosquelettiques", 0) == 1: return "Musculoskeletal"
+        if row.get("Chronic_Disease_cancer", 0) == 1: return "Cancer"
+        if row.get("Chronic_Disease_cardiaque", 0) == 1: return "Cardiaque"
         return "None"
 
     df["Disease_Type"] = df.apply(get_primary_disease, axis=1)
