@@ -441,6 +441,27 @@ To ensure the platform functions correctly, please follow these steps:
 
 ---
 
+## Demo Credentials
+
+For testing the deployed platform, you can use the following credentials:
+
+### Admin
+
+* **Password:** `admin123`
+
+### Employee
+
+You can use either of the following matricules:
+
+| Matricule | Password |
+| --------- | -------- |
+| `76009`   | `string` |
+| `75941`   | `string` |
+
+These credentials are provided for demonstration and testing purposes only.
+
+---
+
 ## Repository Structure
 
 A typical structure may look like this:
