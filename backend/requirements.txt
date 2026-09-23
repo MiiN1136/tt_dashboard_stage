@@ -5,5 +5,5 @@ numpy
 joblib
 scikit-learn
 requests
-
+python-dotenv
 joblib

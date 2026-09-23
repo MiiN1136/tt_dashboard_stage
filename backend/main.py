@@ -1,13 +1,21 @@
 # %%
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+from pymongo import MongoClient
 import joblib
+import smtplib
+from email.message import EmailMessage
+import random
+from datetime import datetime, timedelta, timezone
 import pandas as pd
+import hashlib
 from sklearn.preprocessing import MinMaxScaler
 import numpy as np
 import io
 import os
 import requests
+from dotenv import load_dotenv
 
 # %%
 app = FastAPI()
@@ -19,6 +27,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+SMTP_SERVER = os.getenv("SMTP_SERVER")
+SMTP_PORT = int(os.getenv("SMTP_PORT", 587))
+SENDER_EMAIL = os.getenv("SENDER_EMAIL")
+SENDER_PASSWORD = os.getenv("SENDER_PASSWORD")
+
 feature_names = joblib.load("features.pkl")
 model = joblib.load("tt_healthcare_model1.1.pkl")
 
@@ -27,10 +40,277 @@ url_risk = os.getenv("EMPLOYEE_RISK_DATA")
 url_mycover = os.getenv("MYCOVER_DATA")
 url_hr = os.getenv("FULL_HR_DATA")
 
-# Chargement distant sécurisé
+# # Chargement distant sécurisé
 df_employee_risk = pd.read_csv(url_risk) if url_risk else pd.DataFrame()
 df_mycover = pd.read_csv(url_mycover) if url_mycover else pd.DataFrame()
 full_hr = pd.read_csv(url_hr) if url_hr else pd.DataFrame()
+
+
+# Local testing
+# df_employee_risk = pd.read_csv("employee_risk1.1.csv")
+# df_mycover = pd.read_csv("df_cleaned.csv")
+# full_hr = pd.read_csv("full_hr.csv")
+
+
+# MongoDB Atlas Connection
+# load_dotenv()
+
+client = MongoClient(os.getenv("MONGO_URI"))
+db = client["mycover_db"]
+users_collection = db["users"]
+
+
+class SignupRequest(BaseModel):
+    matricule: str
+    email: str
+    password: str
+
+class VerifyOtpRequest(BaseModel):
+    matricule: str
+    otp: str
+
+class LoginRequest(BaseModel):
+    role: str
+    matricule: str = None
+    password: str
+
+class ForgotPasswordRequest(BaseModel):
+    matricule: str
+    email: str
+
+class ResetPasswordRequest(BaseModel):
+    matricule: str
+    otp: str
+    new_password: str
+
+class ResendOTPRequest(BaseModel):
+    matricule: str
+
+
+def send_otp_email(receiver_email: str, otp_code: str):
+    msg = EmailMessage()
+    msg.set_content(f"Your TT Health Portal verification code is: {otp_code}\n\nThis code will expire in 10 minutes.")
+    msg["Subject"] = "🔐 TT Health Portal - Account Activation Code"
+    msg["From"] = SENDER_EMAIL
+    msg["To"] = receiver_email
+
+    try:
+        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+            server.starttls()
+            server.login(SENDER_EMAIL, SENDER_PASSWORD)
+            server.send_message(msg)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to send email: {str(e)}")
+
+
+@app.post("/api/login")
+def login(data: LoginRequest):
+    if data.role == "admin":
+        if data.password == "admin123":
+            return {"status": "success", "role": "admin"}
+        raise HTTPException(status_code=401, detail="Invalid admin credentials")
+        
+    elif data.role == "employee":
+        query_matricule = int(data.matricule) if data.matricule.isdigit() else data.matricule
+        
+        user = users_collection.find_one({"matricule": str(data.matricule)})
+        hashed_pw = hashlib.sha256(data.password.encode()).hexdigest()
+        
+        if not user or not user.get("password_hash"):
+            # Check if matricule exists anywhere in the medical records dataset
+            valid_employee = not df_mycover[df_mycover["Matricule"] == query_matricule].empty
+            if valid_employee:
+                return {"status": "first_time", "message": "Account not found or unassigned. Please sign up first."}
+            raise HTTPException(status_code=404, detail="Matricule not found in medical registry.")
+            
+        if user["password_hash"] == hashed_pw:
+            return {"status": "success", "role": "employee", "matricule": data.matricule}
+        raise HTTPException(status_code=401, detail="Incorrect password.")
+
+
+@app.post("/api/forgot-password")
+def forgot_password(data: ForgotPasswordRequest):
+    # Check if a verified user exists with this matricule and email
+    user = users_collection.find_one({"matricule": str(data.matricule)})
+    if not user or not user.get("is_verified", False):
+        raise HTTPException(status_code=404, detail="No account found with this Matricule.")
+    
+    if user.get("email") != data.email:
+        raise HTTPException(status_code=400, detail="The provided email does not match our records for this Matricule.")
+    
+    # Generate 6-digit OTP & 10-minute expiration
+    otp_code = f"{random.randint(100000, 999999)}"
+    otp_expires_at = datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(minutes=10)
+    
+    users_collection.update_one(
+        {"matricule": str(data.matricule)},
+        {
+            "$set": {
+                "otp_code": otp_code,
+                "otp_expires_at": otp_expires_at
+            }
+        }
+    )
+    
+    # Dispatch email
+    send_otp_email(data.email, otp_code)
+    return {"status": "otp_sent", "message": "Password reset code sent to your email."}
+
+@app.post("/api/reset-password")
+def reset_password(data: ResetPasswordRequest):
+    user = users_collection.find_one({"matricule": str(data.matricule)})
+    if not user:
+        raise HTTPException(status_code=404, detail="User session not found.")
+        
+    # Check if OTP has expired
+    expires_at = user.get("otp_expires_at")
+    if expires_at:
+        if expires_at.tzinfo is not None:
+            expires_at = expires_at.replace(tzinfo=None)
+        if datetime.now(timezone.utc).replace(tzinfo=None) > expires_at:
+            raise HTTPException(status_code=400, detail="Reset code has expired. Please request a new one.")
+            
+    # Verify OTP
+    if user.get("otp_code") != data.otp:
+        raise HTTPException(status_code=400, detail="Invalid verification code.")
+        
+    hashed_pw = hashlib.sha256(data.new_password.encode()).hexdigest()
+    
+    # Update password and clear OTP tokens
+    users_collection.update_one(
+        {"matricule": str(data.matricule)},
+        {
+            "$set": {"password_hash": hashed_pw},
+            "$unset": {"otp_code": "", "otp_expires_at": ""}
+        }
+    )
+    return {"status": "success", "message": "Password successfully reset. Please log in."}
+
+
+@app.post("/api/resend-otp")
+def resend_otp(data: ResendOTPRequest):
+    user = users_collection.find_one({"matricule": str(data.matricule)})
+    if not user or not user.get("is_verified", False):
+        raise HTTPException(status_code=404, detail="Active user account not found.")
+    
+    email = user.get("email")
+    if not email:
+        raise HTTPException(status_code=400, detail="No corporate email found for this account.")
+    
+    # Generate new 6-digit OTP & 10-minute expiration
+    otp_code = f"{random.randint(100000, 999999)}"
+    otp_expires_at = datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(minutes=10)
+    
+    users_collection.update_one(
+        {"matricule": str(data.matricule)},
+        {
+            "$set": {
+                "otp_code": otp_code,
+                "otp_expires_at": otp_expires_at
+            }
+        }
+    )
+    
+    # Dispatch email
+    send_otp_email(email, otp_code)
+    return {"status": "otp_sent", "message": "A new verification code has been sent to your email."}
+
+@app.post("/api/signup")
+def signup(data: SignupRequest):
+    query_matricule = int(data.matricule) if data.matricule.isdigit() else data.matricule
+    
+    # 1. Check registry
+    valid_employee = not df_mycover[df_mycover["Matricule"] == query_matricule].empty
+    if not valid_employee:
+        raise HTTPException(status_code=404, detail="Matricule not found in medical registry.")
+    
+    # 2. Check if already verified by matricule
+    existing_user = users_collection.find_one({"matricule": str(data.matricule)})
+    if existing_user and existing_user.get("is_verified", False):
+        raise HTTPException(status_code=400, detail="Account is already registered and verified.")
+        
+    # 2.5. Check if email already exists with an active/verified account
+    existing_email = users_collection.find_one({"email": data.email, "is_verified": True})
+    if existing_email:
+        raise HTTPException(status_code=400, detail="Email already associated with an account.")
+    
+    # 3. Generate 6-digit OTP & set a 10-minute expiration window
+    otp_code = f"{random.randint(100000, 999999)}"
+    otp_expires_at = datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(minutes=10)
+    hashed_pw = hashlib.sha256(data.password.encode()).hexdigest()
+    
+    # 4. Save pending account data with expiry timestamp
+    users_collection.update_one(
+        {"matricule": str(data.matricule)},
+        {
+            "$set": {
+                "matricule": str(data.matricule),
+                "email": data.email,
+                "password_hash": hashed_pw,
+                "otp_code": otp_code,
+                "otp_expires_at": otp_expires_at,
+                "is_verified": False
+            }
+        },
+        upsert=True
+    )
+    
+    # 5. Dispatch email
+    send_otp_email(data.email, otp_code)
+    
+    return {"status": "otp_sent", "message": "Verification code sent to your email."}
+
+
+@app.post("/api/verify-otp")
+def verify_otp(data: VerifyOtpRequest):
+    user = users_collection.find_one({"matricule": str(data.matricule)})
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="User session not found. Please sign up again.")
+    
+    if user.get("is_verified", False):
+        raise HTTPException(status_code=400, detail="Account is already verified.")
+    
+    # Check if OTP has expired
+    expires_at = user.get("otp_expires_at")
+    if expires_at:
+    # Strip tzinfo if MongoDB returned it as aware, ensuring safe comparison
+        if expires_at.tzinfo is not None:
+            expires_at = expires_at.replace(tzinfo=None)
+            
+        if datetime.now(timezone.utc).replace(tzinfo=None) > expires_at:
+            raise HTTPException(status_code=400, detail="Verification code has expired. Please sign up again.")
+        
+    # Check if OTP matches
+    if user.get("otp_code") != data.otp:
+        raise HTTPException(status_code=400, detail="Invalid verification code. Please check and try again.")
+    
+    # Activate account & clean up OTP fields
+    users_collection.update_one(
+        {"matricule": str(data.matricule)},
+        {
+            "$set": {"is_verified": True},
+            "$unset": {"otp_code": "", "otp_expires_at": ""}
+        }
+    )
+    
+    return {"status": "success", "message": "Account successfully verified and activated."}
+
+@app.get("/api/employee/records/{matricule}")
+def get_employee_records(matricule: str):
+    # Normalize matricule type to match df_mycover (string vs integer)
+    query_matricule = int(matricule) if matricule.isdigit() else matricule
+    
+    # Query the dataframe safely
+    employee_data = df_mycover[df_mycover["Matricule"] == query_matricule]
+
+    employee_data = employee_data.replace({np.nan: None})
+    
+    if employee_data.empty:
+        raise HTTPException(status_code=404, detail="Record not found in medical registry.")
+        
+    # Return your records as a dictionary/json
+    return employee_data.to_dict(orient="records")
 
 # %%
 FEATURES = [
@@ -73,8 +353,10 @@ def risk_level(score):
         return "Low Risk"
     elif score < 70:
         return "Medium Risk"
-    else:
+    elif score < 95:
         return "High Risk"
+    else:
+        return "Critical"
 
 
 @app.post("/predict")
@@ -120,7 +402,7 @@ def get_high_risk():
     df["Risk_Score"] = df["Predicted_Cost"].apply(risk_score)
     df["Risk_Level"] = df["Risk_Score"].apply(risk_level)
 
-    high_risk_df = df[df["Risk_Level"] == "High Risk"]
+    high_risk_df = df[(df["Risk_Level"] == "High Risk") | (df["Risk_Level"] == "Critical")]
 
     return high_risk_df[
         ["Matricule", "Predicted_Cost", "Risk_Score", "Risk_Level"]
@@ -155,6 +437,8 @@ def cost_by_disease():
 
     disease_cols = [
         "Chronic_Disease_asthme",
+        "Chronic_Disease_cardiaque",
+        "Chronic_Disease_cancer",
         "Chronic_Disease_diabete",
         "Chronic_Disease_troubles musculosquelettiques",
         "Chronic_Disease_hypertension",
@@ -224,9 +508,9 @@ def get_kpis():
     df["Predicted_Cost"] = preds
 
     return {
-        "total_predicted_cost": float(df["Predicted_Cost"].sum()),
+        "total_predicted_cost": float(df["Total_Depense"].sum()),
         "avg_cost": float(df["Predicted_Cost"].mean()),
-        "high_risk_count": int((df["Predicted_Cost"] > 2000).sum()),
+        "high_risk_count": int((df["Predicted_Cost"] >= 500).sum()),
         "total_employees": len(df)
     }
 
@@ -319,11 +603,7 @@ def employee_view(matricule: int):
 
     # aggregate correctly for model
     X = {
-        "Dependent_Age": employee_age,
-        
-        # Couple_TT (Si une seule ligne a True, on considère que c'est un Couple_TT)
-        "Couple_TT": int(model_df["Couple_TT"].any()), 
-        
+        "Dependent_Age": employee_age,        
         # Maladies
         "Chronic_Disease_asthme": int((model_df["Chronic_Disease"] == "asthme").any()),
         "Chronic_Disease_diabete": int((model_df["Chronic_Disease"] == "diabete").any()),
@@ -482,12 +762,8 @@ def risk_trend():
 
     # derive risk level
     def assign_risk(row):
-        if row["Chronic_Disease"] != "None" and row["Total_Depense"] > 2000:
-            return "High Risk"
-        elif row["Total_Depense"] > 500:
-            return "Medium Risk"
-        else:
-            return "Low Risk"
+        score = risk_score(row["Total_Depense"])
+        return risk_level(score)
 
     df["Risk_Level"] = df.apply(assign_risk, axis=1)
 
