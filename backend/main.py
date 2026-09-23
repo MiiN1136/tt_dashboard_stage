@@ -106,7 +106,7 @@ def send_otp_email(receiver_email: str, otp_code: str):
 @app.post("/api/login")
 def login(data: LoginRequest):
     if data.role == "admin":
-        if data.password == "admin123":
+        if data.password == os.getenv("ADMIN_PASSWORD"):
             return {"status": "success", "role": "admin"}
         raise HTTPException(status_code=401, detail="Invalid admin credentials")
         
